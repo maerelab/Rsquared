@@ -20,20 +20,21 @@ library(parallel) #Load the necessary packages
 ```
 
 ``` r
-cvSplits = 200 #Number of cross-validation splits
+cvSplits = 200 #Number of cross-validation (CV) splits
 nFolds = 10 #Number of CV folds
 nCores = 4 #Number of cores to use in multithreading
-nested_cv_result = nestedCV(df, nFolds, cvSplits = cvSplits, nCores = nCores)
+nested_cv_result = nestedCV(df, nFolds, cvSplits = cvSplits, nCores = nCores) 
+#Estimation of standard error on the CV MSE by Bates et al. 2021
 nested_cv_result[[1]]["Bates", "MSEhat"] #The estimated MSE
 ```
 
-    ## [1] 0.9475463
+    ## [1] 0.8263124
 
 ``` r
 nested_cv_result[[1]]["Bates", "SE"] #Corresponding SE
 ```
 
-    ## [1] 0.1510203
+    ## [1] 0.1492654
 
 ``` r
 #Estimate correlation between MSE and MST using bootstrap
@@ -44,7 +45,7 @@ rhoEstimate = cor(matBootEsts["MSE",], matBootEsts["margVar",])
 rhoEstimate #Considerable correlation
 ```
 
-    ## [1] 0.7174728
+    ## [1] 0.3891587
 
 ``` r
 MST = var(y)*(length(y)+1)/length(y) #The MST
@@ -57,4 +58,4 @@ round(seObj, 4) #The resulting R2 and standard error
 ```
 
     ##     R2   R2SE 
-    ## 0.2655 0.0841
+    ## 0.5012 0.0904
