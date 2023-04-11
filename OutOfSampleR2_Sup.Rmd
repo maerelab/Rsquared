@@ -465,15 +465,20 @@ R2sSEsciZM = cbind(R2sSEsZM, CI, "Bootstrap SE" = bootSEsBrasZM, "Bootstrap P-va
 R2sSEsciCop = R2sSEsci
 rownames(R2sSEsciCop) = gsub("_", " ", rownames(R2sSEsciCop))
 colnames(R2sSEsciCop)[1] = "R²"
-nDigits = 2
-R2sSEsciCop[, !grepl(colnames(R2sSEsciCop), pattern =  "P-value")] = apply(R2sSEsciCop[, !grepl(colnames(R2sSEsciCop), pattern =  "P-value")], 1:2, round, digits = nDigits)
-print(xtable(R2sSEsciCop, digits = nDigits, align = "l|ccccccccc", display = c("s", "f", "f", "e", rep("f", 3), "e", "f", "f"), caption = "\\label{tab:R2se}Estimated \\rsq, delta method and nonparametric bootstrap standard error (SE), one-sided p-value and lower and upper bound of the 95\\% confidence interval for 5 \\textit{Brassica napus} phenotypes."), comment = FALSE)
+nDigits = c(NA, 2, 2, 1, 2, 2, 2, 1, 2, 2)
+R2sSEsciCop[, !grepl(colnames(R2sSEsciCop), pattern =  "P-value")] = apply(R2sSEsciCop[, !grepl(colnames(R2sSEsciCop), pattern =  "P-value")], 1:2, round, digits = 2)
+modPval = function(pval, minP = 1e-4){if(pval < minP) "< 0.0001" else as.character(round(pval, 2))}
+R2sSEsciCop[, grep("P-value", colnames(R2sSEsciCop))] = apply(R2sSEsciCop[, grep("P-value", colnames(R2sSEsciCop))],2, function(x) sapply(x, modPval))
+#display = c("s", "f", "f", "e", rep("f", 3), "e", "f", "f")
+print(xtable(R2sSEsciCop, digits = nDigits, align = "l|ccccccccc", caption = "\\label{tab:R2se}Estimated \\rsq, delta method and nonparametric bootstrap standard error (SE), one-sided p-value and lower and upper bound of the 95\\% confidence interval for 5 \\textit{Brassica napus} phenotypes."), comment = FALSE)
 #Zea mays
 R2sSEsciZMCop = R2sSEsciZM
 rownames(R2sSEsciZMCop) = gsub("_", " ", rownames(R2sSEsciZMCop))
 colnames(R2sSEsciZMCop)[1] = "R²"
-print(xtable(R2sSEsciZMCop, digits = nDigits, align = "l|ccccccccc", display = c("s", "f", "f", "e", rep("f", 3), "e", "f", "f"), caption = "\\label{tab:R2seZM}Estimated \\rsq, delta method and nonparametric bootstrap standard error (SE), one-sided p-value between brackets and lower and upper bound of the 95\\% confidence interval for 5 \\textit{Zea mays} phenotypes."), comment = FALSE)
-colnames(R2sSEsciZMCop)[1] = "R²"
+R2sSEsciZMCop[, !grepl(colnames(R2sSEsciZMCop), pattern =  "P-value")] = apply(R2sSEsciZMCop[, !grepl(colnames(R2sSEsciZMCop), pattern =  "P-value")], 1:2, round, digits = 2)
+R2sSEsciZMCop[, grep("P-value", colnames(R2sSEsciZMCop))] = apply(R2sSEsciZMCop[, grep("P-value", colnames(R2sSEsciCop))],
+                                                                  2, function(x) sapply(x, modPval))
+print(xtable(R2sSEsciZMCop, digits = nDigits, align = "l|ccccccccc", caption = "\\label{tab:R2seZM}Estimated \\rsq, delta method and nonparametric bootstrap standard error (SE), one-sided p-value between brackets and lower and upper bound of the 95\\% confidence interval for 5 \\textit{Zea mays} phenotypes."), comment = FALSE)
 ```
 
 ```{r diffProcess, results="asis", include = FALSE}
@@ -585,7 +590,7 @@ ggplot(data = trueSEsAllboot[trueSEsAllboot$bootRepsOuter==10, ], mapping = aes_
     facet_grid(~betas) + xlab("Sample size") + ylab(bquote("Standard error of the "*R^2*" estimator"))
 ```
 
-```{r compareSEs, fig.cap = "\\label{fig:seMSE}Approximated true standard errors of the \\hrsq (y-axis) for cross-validation and .632 bootstrap estimates (colour) for different sample sizes (x-axis) and signal strengths (top panels) over 1,000 Monte-Carlo instances. The number of cross-validation splits was 25, and the number of .632 bootstraps was 200; with these settings, the cross-validation takes about twice as long as the .632 bootstrap to estimate the \\rsq and its SE.", fig.height = 4}
+```{r compareSEs, fig.cap = "\\label{fig:seMSE}Approximated true standard errors of the \\hrsq (y-axis) in the one-dimensional scenario for cross-validation and .632 bootstrap estimates (colour) for different sample sizes (x-axis) and signal strengths (top panels) over 1,000 Monte-Carlo instances. The number of cross-validation splits was 25, and the number of .632 bootstraps was 200; with these settings, the cross-validation takes about twice as long as the .632 bootstrap to estimate the \\rsq and its SE.", fig.height = 4}
 trueSEcv = cbind("trueSE" = sapply(seq_along(sweepProcess), function(x){ 
     sweepProcess[[x]][[1]]$ses["oracleSE"]
 }), gridSweep)
@@ -663,7 +668,7 @@ biasAllAgg$Resampling_method = factor(biasAllAgg$Resampling_method, levels = c("
 ggplot(data = biasAllAgg, aes_string(y = "biasMSE", x = "samSize")) + geom_line() + facet_grid(betas ~ Resampling_method) + xlab("Sample size") + ylab(bquote('Bias of MSE estimation')) + geom_hline(yintercept = 0, linetype = "dotted") 
 ```
 
-```{r biasR2, fig.cap = "Estimation error of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) over 1,000 Monte-Carlo instances as a function of sample size (x-axis) and signal strength (side panels) for 200 cross-validation splits and 200 .632 bootstrap instances. Bias decreases with growing sample size and for .632 bootstrap with growing effect size. \\label{fig:biasR2Uni}", fig.width = 4.2}
+```{r biasR2, fig.cap = "Estimation error of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) in the one-dimensional scenario over 1,000 Monte-Carlo instances as a function of sample size (x-axis) and signal strength (side panels) for 200 cross-validation splits and 200 .632 bootstrap instances. Bias decreases with growing sample size and for .632 bootstrap with growing effect size. \\label{fig:biasR2Uni}", fig.width = 4.2}
 biasProcR2 = cbind("biasR2" = sapply(seq_along(sweepProcess), function(x){
     biasR2 = sapply(sweepProcess[[x]], function(y){
         estR2 = 1-y$MSEhat/y$margVar
@@ -723,7 +728,7 @@ abline(h = sdMST^2*(nMST+1)/nMST, col = "blue")
 #### The variance of the MSE
 <!-- The estimation of the variance of the MSE is investigated in Figures \ref{fig:biasMSESE}-\ref{fig:biasMSESEboot}. -->
 
-```{r varMSE, fig.cap = "Mean difference between the cross-validation Var(MSE) estimator by \\textcite{Bates2021} and approximated true variance  of the MSE over 1,000 Monte-Carlo instances (y-axis) as a function of  sample size (x-axis), number of cross-validation splits (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. For sufficiently large sample sizes and number of cross-validation splits, the estimator of the variance is nearly unbiased.\\label{fig:biasMSESE}"}
+```{r varMSE, fig.cap = "Mean difference between the cross-validation Var(MSE) estimator by \\textcite{Bates2021} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario as a function of  sample size (x-axis), number of cross-validation splits (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. For sufficiently large sample sizes and number of cross-validation splits, the estimator of the variance is nearly unbiased.\\label{fig:biasMSESE}"}
 biasProcMSESE = cbind(gridSweep, "biasSEMSE" = sapply(seq_along(sweepProcess), function(x){
     resMSE = sapply(sweepProcess[[x]], function(y){
         c("MSEhat" = y$MSEhat, "MSEsSE" = y$MSEsSE)
@@ -734,7 +739,7 @@ ggplot(data = biasProcMSESE[biasProcMSESE$bootReps==500,], aes_string(y = "biasS
     geom_hline(yintercept = 0, linetype = "dotted")
 ```
 
-```{r varMSEBoot, fig.cap = "Mean difference between the .632 bootstrap Var(MSE) estimator by \\textcite{Efron1997} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) as a function of  sample size (x-axis), number of bootstraps (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. The bias decreases with number of bootstrap samples and sample size.\\label{fig:biasMSESEboot}"}
+```{r varMSEBoot, fig.cap = "Mean difference between the .632 bootstrap Var(MSE) estimator by \\textcite{Efron1997} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario as a function of  sample size (x-axis), number of bootstraps (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. The bias decreases with number of bootstrap samples and sample size.\\label{fig:biasMSESEboot}"}
 biasProcMSESEboot = cbind(gridSweepBoot, "biasSEMSE" = sapply(seq_along(sweepBootProcess), function(x){
     resMSE = sapply(sweepBootProcess[[x]], function(y){
         c("MSEhat" = y$MSEhat, "MSEsSE" = y$MSEsSE)
@@ -751,7 +756,7 @@ ggplot(data = biasProcMSESEboot[biasProcMSESEboot$bootRepsOuter==10,], aes_strin
 #### Cross-validation
 <!-- Cross-validation results are shown in Figures \ref{fig:mseUni}-\ref{fig:zTest}. -->
 
-```{r sweepProcBiasSEmse, fig.cap = "MSE of the standard error (SE) of the \\rsq (y-axis) for cross-validation as a function of estimation method (colour), sample size (x-axis), number of bootstraps (top panels), signal strength (side panels) and number of cross-validation splits (linetype). The y-axis is on the log scale. The MSE of the SE estimation is seen to decrease with sample size and for the delta method SE also with the number of cross-validation splits. See \\fref{fig:OneDim} in the main text for the direction of the error. \\label{fig:mseUni}", fig.height = 5}
+```{r sweepProcBiasSEmse, fig.cap = "MSE of the standard error (SE) of the \\rsq (y-axis) for cross-validation in the one-dimensional scenario as a function of estimation method (colour), sample size (x-axis), number of bootstraps (top panels), signal strength (side panels) and number of cross-validation splits (linetype). The y-axis is on the log scale. The MSE of the SE estimation is seen to decrease with sample size and for the delta method SE also with the number of cross-validation splits. See \\fref{fig:OneDim} in the main text for the direction of the error. \\label{fig:mseUni}", fig.height = 5}
 biasProcSE = Reduce(f = rbind, lapply(seq_along(sweepProcess), function(x){
     biasSE = sapply(sweepProcess[[x]], function(y){
         trueR2se = y$ses["oracleSE"]
@@ -789,7 +794,7 @@ rm(idd)
 #In low dimensions, nonparametric bootstrap provides and excellent estimate of the correlation, with parametric bootstrap tending to overestimate it and cross-validation tending to underestimate
 ```
 
-```{r plotwidthsweep, fig.cap = 'Average width of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for cross-validation for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of bootstrap replicates (top panels) for 200 repeats of the cross-validation splits. The number of bootstraps has little effect on the confidence intervals of the methods based on the delta method SE.\\label{fig:sweepWidth}', fig.height = 6, fig.width = 7}
+```{r plotwidthsweep, fig.cap = 'Average width of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for cross-validation in the one-dimensional scenario for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of bootstrap replicates (top panels) for 200 repeats of the cross-validation splits. The number of bootstraps has little effect on the confidence intervals of the methods based on the delta method SE.\\label{fig:sweepWidth}', fig.height = 6, fig.width = 7}
 sweepSumW = cbind(gridSweep, r2cisweepWidthSum)
 sweepSumMoltW = melt(sweepSumW, id.vars = names(gridSweep), value.name = "Width_of_confidence_interval", variable.name = 'Method')
 sweepSumMoltW$betas = factor(sweepSumMoltW$betas)
@@ -856,7 +861,7 @@ sweepSumMoltBoot$Method = factor(sweepSumMoltBoot$Method, levels = methodLevels,
 labels2plotBoot = labels2plot#c("Delta method SE (nonparametric bootstrap)", "Delta method SE (jackknife)", "Bootstrap SE (nonparametric)", "Percentile bootstrap", "BCa")
 ```
 
-```{r sweepProcBiasSEboot, fig.cap = "Log10 of geometric mean of the ratios of estimated to the approximated true SE of the \\rsq over 1,000 Monte-Carlo instances (y-axis) for the .632 bootstrap as a function of estimation method (colour), sample size (x-axis), number of inner .632 bootstraps for MSE estimation (top panels), signal strength (side panels) and number of outer bootstraps (linetype). The results are similar to the CV results in the top panel of \\fref{fig:OneDim}.\\label{fig:biasUniBoot}", fig.widht = 7, fig.height = 7}
+```{r sweepProcBiasSEboot, fig.cap = "Log10 of geometric mean of the ratios of estimated to the approximated true SE of the \\rsq over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario for the .632 bootstrap as a function of estimation method (colour), sample size (x-axis), number of inner .632 bootstraps for MSE estimation (top panels), signal strength (side panels) and number of outer bootstraps (linetype). The results are similar to the CV results in the top panel of \\fref{fig:OneDim}.\\label{fig:biasUniBoot}", fig.widht = 7, fig.height = 7}
 linetypesBoot = c("solid", "dashed", "dotdash", "dotted"); names(linetypesBoot) = bootRepsSweep
 biasProcSEboot = Reduce(f = rbind, lapply(seq_along(sweepBootProcess), function(x){
     biasSE = sapply(sweepBootProcess[[x]], function(y){
@@ -873,7 +878,7 @@ ggplot(data = biasProcSEboot, aes_string(y = "BiasSE", x = "samSize", colour = "
 #added value of extra cvsplits reaches plateau around 100 already 
 ```
 
-```{r sweepProcMSESEboot, fig.cap = "MSE of the estimated SE of the .632 bootstrap \\rsq (y-axis) as a function of estimation method (colour), sample size (x-axis), number of inner .632 bootstraps for MSE estimation (top panels), signal strength (side panels) and number of outer bootstraps (linetype). The y-axis is on the log scale. The MSE is seen to decrease with the sample size, and for the delta method SE, with the number of inner .632 bootstraps. \\label{fig:mseUniBoot}"}
+```{r sweepProcMSESEboot, fig.cap = "MSE of the estimated SE of the .632 bootstrap \\rsq (y-axis) as a function of estimation method (colour) in the one-dimensional scenario, sample size (x-axis), number of inner .632 bootstraps for MSE estimation (top panels), signal strength (side panels) and number of outer bootstraps (linetype). The y-axis is on the log scale. The MSE is seen to decrease with the sample size, and for the delta method SE, with the number of inner .632 bootstraps. \\label{fig:mseUniBoot}"}
 biasProcSEboot = Reduce(f = rbind, lapply(seq_along(sweepBootProcess), function(x){
     biasSE = sapply(sweepBootProcess[[x]], function(y){
         trueR2se = y$ses["oracleSE"]
@@ -924,13 +929,13 @@ ggplot(data = moltRhoList[with(moltRhoList, bootReps == bootRepsSweepBoot[3] & b
 rm(idd) 
 ```
 
-```{r risweepCovBoot, fig.cap = 'Coverage of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for the .632 bootstrap for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of inner .632 bootstrap replicates (top panels) for 500 repeats of the outer bootstrap. The results are similar to the CV case shown in \\fref{fig:OneDim}.\\label{fig:sweepCovBoot}'}
+```{r risweepCovBoot, fig.cap = 'Coverage of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for the .632 bootstrap in the one-dimensional scenario for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of inner .632 bootstrap replicates (top panels) for 500 repeats of the outer bootstrap. The results are similar to the CV case shown in \\fref{fig:OneDim}.\\label{fig:sweepCovBoot}'}
 ggplot(data = sweepSumMoltBoot[with(sweepSumMoltBoot, bootRepsOuter==500 & Method %in% labels2plot),], aes(x = samSize, y = Coverage, col = Method, )) + geom_line() + facet_grid(betas~ bootReps, scale = "free_y") + xlab("Sample size") +
     geom_hline(yintercept = 1-sigLevel, linetype = 'dotted') + ylab(bquote("Coverage of the 95% confidence interval for "*R^2))+ 
     scale_colour_manual(values = methodColours[names(methodColours) %in% labels2plot])  + scale_x_continuous(breaks = samSize) + theme(axis.text.x = element_text(angle=60))
 ```
 
-```{r plotwidthsweepBoot, fig.cap = 'Average width of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for the .632 bootstrap for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of .632 bootstrap replicates (top panels) for 500 outer bootstrap repeats.\\label{fig:sweepWidthBoot}'}
+```{r plotwidthsweepBoot, fig.cap = 'Average width of the 95\\% confidence intervals for \\rsq across 1,000 Monte-Carlo instances (y-axis) for the .632 bootstrap in the one-dimensional scenario for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of .632 bootstrap replicates (top panels) for 500 outer bootstrap repeats.\\label{fig:sweepWidthBoot}'}
 sweepSumW = cbind(gridSweepBoot, r2cisweepWidthSum) 
 sweepSumMoltW = melt(sweepSumW, id.vars = names(gridSweepBoot), value.name = "Width_of_confidence_interval", variable.name = 'Method')
 sweepSumMoltW$betas = factor(sweepSumMoltW$betas)
@@ -1205,7 +1210,7 @@ names(dimnames(R2cast)) <- c("Effect size", "Sample size")
 print.xtableFtable(xtableFtable(ftable(round(R2cast,3), method = "non-compact"), digits = 3, caption = "Monte-Carlo approximated true standard errors (SE) of the $R^2$ estimated through the .632 bootstrap with 200 outer and 30 inner bootstrap instances for the high-dimensional scenario for different sample sizes (columns) and effect sizes $\\beta$ (rows).\\label{tab:trueSER2HDboot}"), comment = FALSE)
 ```
 
-```{r trueSEfigBootHD, fig.cap = "Monte-Carlo approximated true standard errors (SE) of the \\hrsq (y-axis) estimated through the .632 bootstrap for the high-dimensional scenario for different sample sizes (x-axis), effect sizes $\\beta$ (top panels) and number of .632 bootstraps (line type). \\label{fig:trueSER2HDboot}", fig.height=3.5}
+```{r trueSEfigBootHD, fig.cap = "Monte-Carlo approximated true standard errors (SE) of the \\hrsq (y-axis) in the high-dimensional scenario estimated through the .632 bootstrap for the high-dimensional scenario for different sample sizes (x-axis), effect sizes $\\beta$ (top panels) and number of .632 bootstraps (line type). \\label{fig:trueSER2HDboot}", fig.height=3.5}
 R2mataggFig = aggregate(R2 ~ betas + samSize + bootReps, data = trueR2sAllhdBoot[with(trueR2sAllhdBoot,bootRepsOuter == 30),], FUN = sd)
 ggplot(data = R2mataggFig, mapping = aes_string(x = "samSize", y = "R2", linetype = "factor(bootReps)")) + geom_line() + guides(linetype = guide_legend("Number of .632 bootstraps")) + 
     facet_grid(~betas) + xlab("Sample size") + ylab(bquote("Standard error of the "*R^2*" estimator"))
@@ -1416,7 +1421,6 @@ ggsave(HighDimplot, file = "Graphs/highDimCombi.pdf", height = 5.3, width = 7.5)
 \clearpage
 
 #### The .632 bootstrap
-<!-- .632 bootstrap results for the high-dimensional scenario are shown in Figures \ref{fig:biasHighBoot}-\ref{fig:zTestHDBoot}. -->
 
 ```{r checkSEhighBoot, fig.cap= "Log10 ratio of the estimated to the Monte-Carlo approximated true SE of the .632 bootstrap \\rsq  (y-axis) across 100 Monte-Carlo instances for the high-dimensional scenario as a function of sample size (x-axis), number of bootstrap replicates (top panels) and signal strength (side panels). The dotted line at 0 is a visual aid. The delta method SE with nonparametric bootstrap or jackknife is the only method that never underestimates the SE.\\label{fig:biasHighBoot}"}
 biasProcSEboot = cbind(gridSweepHighBoot, t(sapply(seq_len(nrow(gridSweepHighBoot)), function(i){ 
@@ -1546,7 +1550,7 @@ ggplot(data = typeIerrorZMolt[with(typeIerrorZMolt, Method %in% labels2plotHigh 
 
 # The distribution of the \hrsq \label{sec:R2dist}
 
-```{r covMSEMST, eval = FALSE, fig.cap = '\\label{fig:covMSEMST}Scatterplot of MST estimates vs MSE estimates on 5,000 independent test datasets under the null scenario. The title shows the correlation.', fig.width = 4}
+```{r covMSEMST, eval = FALSE, fig.cap = '\\label{fig:covMSEMST}Scatterplot of MST estimates vs MSE estimates on 5,000 independent test datasets under the null hypothesis in the one-dimensional scenario. The title shows the correlation.', fig.width = 4}
 mse1 = vapply(FUN.VALUE = double(1), trueMSEnullSingle[["p2"]], function(w){w$MSE[1]})
 plot(mse1, margVars, xlab = "Estimated MSE", ylab = "Estimated MST", 
      main = paste('Correlation:', round(digits = 3, cor(mse1, margVars))))
