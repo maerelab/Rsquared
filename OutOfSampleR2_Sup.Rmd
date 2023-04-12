@@ -603,14 +603,12 @@ trueSEboot$Data_splitting_algorithm = ".632 Bootstrap"
 trueSEboot = trueSEboot[with(trueSEboot, bootReps==200 & bootRepsOuter == 10), ]
 namesKeep = c("trueSE", "samSize", "betas", "Data_splitting_algorithm") 
 trueMSEmerge = rbind(trueSEcv[, namesKeep], trueSEboot[, namesKeep])
-ggplot(data = trueMSEmerge, aes(x = samSize, y = trueSE, colour = Data_splitting_algorithm)) + geom_point() + facet_grid(~betas) +  ylab(bquote("True standard error of the "*R^2)) + xlab("Sample size") + scale_x_continuous(breaks = unique(trueSEboot$samSize)) + theme(axis.text.x = element_text(angle=60))
+ggplot(data = trueMSEmerge, aes(x = samSize, y = trueSE, colour = Data_splitting_algorithm)) + geom_point() + facet_grid(~betas) +  ylab(bquote("True standard error of the "*R^2)) + xlab("Sample size") + scale_x_continuous(breaks = unique(trueSEboot$samSize)) + theme(axis.text.x = element_text(angle = 60))
 ```
 
 \clearpage
 
-### Alternative estimators for the \rsq \label{sec:altEst}
-
-```{r r2average, fig.cap = "Boxplots of \\rsq values estimated in three different ways using cross-validation (x-axis, see Section \\ref{sec:estR2} in the main text) for different sample sizes and effect sizes (see plot titles). Simple, non-nested CV is used to estimate the MSE, the rest of the setup is the same as for the one-dimensional scenario simulations with exclusion of the sample size 30. Diamonds indicate means; the plot was trunctated at -2 for legibility. The dashed horizontal line indicates the true \\rsq approximated through Monte-Carlo simulation from Table \\ref{tab:trueR2}.\\label{fig:altR2}", fig.height = 9}
+```{r r2average, include = FALSE}
 nSimAv = 1e3 
 gridAv = expand.grid('samSize' = samSize[-2], 'betas' = betas)
 unFolds <- seq_len(nOuterFolds)
@@ -629,19 +627,24 @@ if(!file.exists(avR2File <- "Results/avR2.RData")){
                     c("MSE" = MSE, "R2" = 1-MSE/MST, "R2test" = 1-MSE/MSTtest)
                 })
             MSTtot = var(trainDat$y)*(nAv+1)/nAv
-            c("Pooling R2" = 1-mean(R2s["MSE",])/MSTtot, "Averaging R2\ntraining MST" = mean(R2s[ "R2",]), "Averaging R2\ntest MST" = mean(R2s[ "R2test",]))
+            c("Pooling R2" = 1-mean(R2s["MSE",])/MSTtot, "Averaging R2\ntraining MST" = mean(R2s[ "R2",]), 
+              "Averaging R2\ntest MST" = mean(R2s[ "R2test",]))
         })
     })
     save(avR2s, file = avR2File)
 } else load(avR2File)
-par(mfrow = c(4,3), mar = c(3, 1.8, 2.5, 1))
-for(j in seq_len(nrow(gridAv))){
-    boxplot(t(avR2s[[j]]), main = paste0("Sample size ", gridAv[j, "samSize"], "\neffect size ", gridAv[j, "betas"]),
-            ylim = c(max(min(avR2s[[j]]), -2), max(avR2s[[j]])), cex.axis = 0.9)
-    points(seq_len(nrow(avR2s[[j]])), pch = 5, rowMeans(avR2s[[j]]))
-    abline(h = R2castTrue[as.character(gridAv[j, "betas"]), as.character(gridAv[j, "samSize"])], lty = "dashed")
-}
-par(mfrow = c(1,1))
+moltAvR2 = melt(id.vars = c("samSize", "betas"), Reduce(f = rbind, lapply(seq_along(avR2s), function(x) cbind(t(avR2s[[x]]), gridAv[x, ]))))
+moltAvR2agg = aggregate(value ~ samSize + betas + variable, FUN = mean, data = moltAvR2)
+ggplot(data = moltAvR2, aes(y = value, col = variable, x = variable)) + geom_boxplot() +
+    stat_boxplot(geom ='errorbar', width = 0.5) + 
+    facet_grid(samSize ~ betas, scale = "free_y") + coord_cartesian(ylim = c(-1, max(moltAvR2$value))) +
+    geom_point(data = moltAvR2agg, aes(x = variable, y = value), shape = 5) +
+    geom_hline(data = R2matagg[R2matagg$samSize %in% unique(gridAv$samSize),], 
+               aes(yintercept = R2), linetype = "dotted") +
+    scale_colour_discrete(name = "Estimation method") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+    ylab("Estimated R²") + xlab("")
+ggsave("Graphs/estR2.pdf", height = 5.3, width = 7.5)
 ```
 
 \clearpage
@@ -829,7 +832,6 @@ ggplot(data = typeIerrorZMolt[typeIerrorZMolt$Method %in% labels2plot,], aes_str
 \clearpage
 
 #### The .632 bootstrap
-<!-- Bootstrap .632 results are shown in Figures \ref{fig:biasUniBoot}-\ref{fig:zTestBoot}. -->
 
 ```{r BootSweepCovProc}
 bootSweepCI = lapply(seq_along(sweepBootProcess), function(i){
@@ -858,7 +860,7 @@ sweepSum = cbind(gridSweepBoot, r2cisweepCovSum)
 sweepSumMoltBoot = melt(sweepSum, id.vars = names(gridSweepBoot), value.name = "Coverage", variable.name = 'Method')
 sweepSumMoltBoot$betas = factor(sweepSumMoltBoot$betas)
 sweepSumMoltBoot$Method = factor(sweepSumMoltBoot$Method, levels = methodLevels, labels = methodLabels)
-labels2plotBoot = labels2plot#c("Delta method SE (nonparametric bootstrap)", "Delta method SE (jackknife)", "Bootstrap SE (nonparametric)", "Percentile bootstrap", "BCa")
+labels2plotBoot = labels2plot
 ```
 
 ```{r sweepProcBiasSEboot, fig.cap = "Log10 of geometric mean of the ratios of estimated to the approximated true SE of the \\rsq over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario for the .632 bootstrap as a function of estimation method (colour), sample size (x-axis), number of inner .632 bootstraps for MSE estimation (top panels), signal strength (side panels) and number of outer bootstraps (linetype). The results are similar to the CV results in the top panel of \\fref{fig:OneDim}.\\label{fig:biasUniBoot}", fig.widht = 7, fig.height = 7}
@@ -1214,6 +1216,47 @@ print.xtableFtable(xtableFtable(ftable(round(R2cast,3), method = "non-compact"),
 R2mataggFig = aggregate(R2 ~ betas + samSize + bootReps, data = trueR2sAllhdBoot[with(trueR2sAllhdBoot,bootRepsOuter == 30),], FUN = sd)
 ggplot(data = R2mataggFig, mapping = aes_string(x = "samSize", y = "R2", linetype = "factor(bootReps)")) + geom_line() + guides(linetype = guide_legend("Number of .632 bootstraps")) + 
     facet_grid(~betas) + xlab("Sample size") + ylab(bquote("Standard error of the "*R^2*" estimator"))
+```
+
+\clearpage
+
+### Alternative estimators for the \rsq \label{sec:altEst}
+
+```{r r2estHigh, fig.cap = "Boxplots of \\rsq values estimated in three different ways for the high-dimensional scenario using cross-validation (x-axis, see Section \\ref{sec:estR2} in the main text) for different sample sizes (side panels) and effect sizes (top panels). Simple, non-nested CV is used to estimate the MSE. Diamonds indicate means; the plot was trunctated at -1 for legibility. The dashed horizontal line indicates the true \\rsq approximated through Monte-Carlo simulation from Table \\ref{tab:trueR2HD}.\\label{fig:altR2high}", fig.height = 7}
+gridAvHigh = expand.grid('samSize' = samSize[-1], 'betas' = betas[-4])
+nSimAvHigh = 1e2
+if(!file.exists(avR2highFile <- "Results/avR2high.RData")){
+    avR2highs = mclapply(mc.cores = nCores, seq_len(nrow(gridAvHigh)), function(j){
+        vapply(integer(nSimAvHigh), FUN.VALUE = double(3), function(i){
+            nAv = gridAvHigh[j, "samSize"]
+            foldsAv = sample(rep(unFolds, length.out = nAv))
+            trainDat = genDat(nAv, p, betas = betasHigh[as.character(gridAvHigh[j, "betas"]),])
+            R2s = vapply(unFolds, FUN.VALUE = double(3), function(uf){
+                    idTrain = foldsAv!=uf
+                    predTest = predGlmnet(trainDat$x[idTrain,], trainDat$y[idTrain], trainDat$x[!idTrain,], alpha = alpha)
+                    MSE = mean((predTest-trainDat$y[!idTrain])^2)
+                    MST = var(trainDat$y[idTrain])*(sum(idTrain)+1)/sum(idTrain)
+                    MSTtest = var(trainDat$y[!idTrain])
+                    c("MSE" = MSE, "R2" = 1-MSE/MST, "R2test" = 1-MSE/MSTtest)
+                })
+            MSTtot = var(trainDat$y)*(nAv+1)/nAv
+            c("Pooling R2" = 1-mean(R2s["MSE",])/MSTtot, "Averaging R2\ntraining MST" = mean(R2s[ "R2",]), "Averaging R2\ntest MST" = mean(R2s[ "R2test",]))
+        })
+    })
+    save(avR2highs, file = avR2highFile)
+} else load(avR2highFile)
+R2mataggHigh = aggregate(R2 ~ betas + samSize, data = trueR2sAllhdtrue, FUN = mean)
+moltAvR2high = melt(id.vars = c("samSize", "betas"), Reduce(f = rbind, lapply(seq_along(avR2highs), function(x) cbind(t(avR2highs[[x]]), gridAvHigh[x, ]))))
+moltAvR2agg = aggregate(value ~ samSize + betas + variable, FUN = mean, data = moltAvR2high)
+ggplot(data = moltAvR2high, aes(y = value, col = variable, x = variable)) + geom_boxplot() +
+    stat_boxplot(geom ='errorbar', width = 0.5) + 
+    facet_grid(samSize ~ betas, scale = "free_y") + coord_cartesian(ylim = c(-1, max(moltAvR2high$value))) +
+    geom_point(data = moltAvR2agg, aes(x = variable, y = value), shape = 5) +
+    geom_hline(data = R2mataggHigh[R2mataggHigh$samSize %in% unique(gridAv$samSize),], 
+               aes(yintercept = R2), linetype = "dotted") +
+    scale_colour_discrete(name = "Estimation method") +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+    ylab("Estimated R²") + xlab("")
 ```
 
 \clearpage
