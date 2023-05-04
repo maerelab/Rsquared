@@ -643,7 +643,7 @@ ggplot(data = moltAvR2, aes(y = value, col = variable, x = variable)) + geom_box
                aes(yintercept = R2), linetype = "dotted") +
     scale_colour_discrete(name = "Estimation method") +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-    ylab("Estimated R²") + xlab("")
+    ylab("R² estimate") + xlab("")
 ggsave("Graphs/estR2.pdf", height = 5.3, width = 7.5)
 ```
 
@@ -651,7 +651,7 @@ ggsave("Graphs/estR2.pdf", height = 5.3, width = 7.5)
 
 ### Bias
 
-```{r bootCVEstimationBias, fig.cap = "Estimated MSE minus approximated true MSE averaged over 1,000 Monte-Carlo instances (y-axis) for the one-dimensional scenario for cross-validation with 200 CV splits (left) and for the .632 bootstrap with 200 inner bootstrap instances (right) as a function of sample size (x-axis) and signal strength (side panels). The horizontal dotted line at 0 indicates no bias. Bootstrap .632 estimation clearly has a downward bias in MSE estimation, which decreases with increasing sample size, whereas cross-validation with bias correction as proposed by \\textcite{Bates2021} is unbiased.\\label{fig:biasMSE}", fig.width = 4.2}
+```{r bootCVEstimationBias, fig.cap = "Estimated MSE minus approximated true MSE averaged over 1,000 Monte-Carlo instances (y-axis) for the one-dimensional scenario for cross-validation with 200 CV splits (left) and for the .632 bootstrap with 200 inner bootstrap instances (right) as a function of sample size (x-axis) and signal strength (side panels). The horizontal dotted line at 0 indicates no bias. Bootstrap .632 estimation clearly has a downward bias in MSE estimation, which decreases with increasing sample size, whereas cross-validation with bias correction as proposed by \\textcite{Bates2023} is unbiased.\\label{fig:biasMSE}", fig.width = 4.2}
 biasBoot = cbind("biasMSE" = sapply(sweepBootProcess, function(x){ 
     mean(sapply(x, function(y){
         y$MSEhat-y$true["trueMSE"]
@@ -700,7 +700,7 @@ ggplot(data = biasAllAgg, aes_string(y = "biasR2", x = "samSize")) + geom_line()
 
 \clearpage
 
-The unbiasedness of the analytical estimator for the MST in equation \eqref{eq:MST} in the main text is illustrated in a separate simulation experiment. Data $\mb Y$ are drawn from a normal distribution with mean 0 and variance $\sigma^2 = 2.25$ with a sample size of 10. Three different approaches are used to estimate the out-of-sample MST: an independent test set, cross-validation and the analytical MST from \eqref{eq:MST}. In the first case, an independent test set of size 10 is drawn in the same way as the data the model is trained on, and the average squared difference between the mean of the original dataset and the observations of the test set is used to estimate MST. For the cross-validation case, leave-one-out CV is used to estimate the MST. To eliminate bias from difference in dataset size, the total sample size for the cross-validation was 11, leading to training folds of size 10. Boxplots of the three estimates over 100,000 Monte-Carlo instances are shown in \fref{fig:biasMST}, demonstrating the equivalence of the three approaches, as well as the necessity of the inflation factor $\frac{n+1}{n}$ in \eqref{eq:MST}. Evidently, the expression \eqref{eq:MST} is the fastest and simplest option. 
+The unbiasedness of the analytical estimator for the MST in equation \eqref{eq:MST} in the main text is illustrated in a separate simulation experiment. Data $\mb Y$ are drawn from a normal distribution with mean 0 and variance $\sigma^2 = 2.25$ with a sample size of 10. Three different approaches are used to estimate the out-of-sample MST: an independent test set, cross-validation and the analytical MST from \eqref{eq:MST}. In the first case, an independent test set of size 10 is drawn in the same way as the data the model is trained on, and the average squared difference between the mean of the original dataset and the observations of the test set is used to estimate MST. For the cross-validation case, leave-one-out CV is used to estimate the MST. To eliminate bias from difference in dataset size, the total sample size for the cross-validation was 11, leading to training folds of size 10. Boxplots of the three estimates over 100,000 Monte-Carlo instances are shown in \fref{fig:biasMST}, demonstrating the equivalence of the three approaches, as well as the necessity of the inflation factor $\frac{n+1}{n}$ in \eqref{eq:MST}. Evidently, the analytical MST from expression \eqref{eq:MST} is the fastest and simplest option. 
 
 ```{r biasMST, fig.cap = "Boxplots of MST estimated on an independent test set, through leave-one-out cross-validation and analytically (equation \\eqref{eq:MST} in the main text) for a sample size of 10, for 100,000 Monte-Carlo instances. The red horizontal line indicates the variance of the outcome Var(Y); the blue line indicates Var(Y)*(n+1)/n, the true MST.\\label{fig:biasMST}", fig.width = 6.5, fig.height = 4.5}
 nMST = 10
@@ -731,7 +731,7 @@ abline(h = sdMST^2*(nMST+1)/nMST, col = "blue")
 #### The variance of the MSE
 <!-- The estimation of the variance of the MSE is investigated in Figures \ref{fig:biasMSESE}-\ref{fig:biasMSESEboot}. -->
 
-```{r varMSE, fig.cap = "Mean difference between the cross-validation Var(MSE) estimator by \\textcite{Bates2021} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario as a function of  sample size (x-axis), number of cross-validation splits (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. For sufficiently large sample sizes and number of cross-validation splits, the estimator of the variance is nearly unbiased.\\label{fig:biasMSESE}"}
+```{r varMSE, fig.cap = "Mean difference between the cross-validation Var(MSE) estimator by \\textcite{Bates2023} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario as a function of  sample size (x-axis), number of cross-validation splits (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. For sufficiently large sample sizes and number of cross-validation splits, the estimator of the variance is nearly unbiased.\\label{fig:biasMSESE}"}
 biasProcMSESE = cbind(gridSweep, "biasSEMSE" = sapply(seq_along(sweepProcess), function(x){
     resMSE = sapply(sweepProcess[[x]], function(y){
         c("MSEhat" = y$MSEhat, "MSEsSE" = y$MSEsSE)
@@ -1248,22 +1248,24 @@ if(!file.exists(avR2highFile <- "Results/avR2high.RData")){
 R2mataggHigh = aggregate(R2 ~ betas + samSize, data = trueR2sAllhdtrue, FUN = mean)
 moltAvR2high = melt(id.vars = c("samSize", "betas"), Reduce(f = rbind, lapply(seq_along(avR2highs), function(x) cbind(t(avR2highs[[x]]), gridAvHigh[x, ]))))
 moltAvR2agg = aggregate(value ~ samSize + betas + variable, FUN = mean, data = moltAvR2high)
+moltAvR2high$samSize = factor(moltAvR2high$samSize);moltAvR2high$betas = factor(moltAvR2high$betas)
+R2mataggHigh$samSize = factor(R2mataggHigh$samSize);R2mataggHigh$betas = factor(R2mataggHigh$betas)
 ggplot(data = moltAvR2high, aes(y = value, col = variable, x = variable)) + geom_boxplot() +
     stat_boxplot(geom ='errorbar', width = 0.5) + 
     facet_grid(samSize ~ betas, scale = "free_y") + coord_cartesian(ylim = c(-1, max(moltAvR2high$value))) +
     geom_point(data = moltAvR2agg, aes(x = variable, y = value), shape = 5) +
-    geom_hline(data = R2mataggHigh[R2mataggHigh$samSize %in% unique(gridAv$samSize),], 
+    geom_hline(data = R2mataggHigh[R2mataggHigh$samSize %in% unique(gridAvHigh$samSize),], 
                aes(yintercept = R2), linetype = "dotted") +
     scale_colour_discrete(name = "Estimation method") +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-    ylab("Estimated R²") + xlab("")
+    ylab("R² estimate") + xlab("")
 ```
 
 \clearpage
 
 ### Bias \label{sec:biasHD}
 
-```{r CVEstimationHDboot, fig.height = 4, fig.cap = "Bias of the MSE estimation over 100 Monte-Carlo instances (y-axis) through cross-validation and .632 bootstrap (top panels) for the high-dimensional scenario as a function of sample size (x-axis) and signal strength (side panels) for 100 cross-validation splits and 200 bootstraps. The horizontal dotted line at 0 indicates no bias. For strong signals, the estimation of the MSE becomes difficult, since the true \\rsq may in some range increase quickly with sample size for high-dimensional models, and resampling algorithms fail to detect this.\\label{fig:biasMSEHD}", fig.width = 4.2}
+```{r CVEstimationHDboot, fig.height = 4, fig.cap = "Bias of the MSE estimation over 100 Monte-Carlo instances (y-axis) through cross-validation and .632 bootstrap (top panels) for the high-dimensional scenario as a function of sample size (x-axis) and signal strength (side panels) for 100 cross-validation splits and 200 bootstraps. The horizontal dotted line at 0 indicates no bias. For strong signals, the estimation of the MSE becomes difficult, since the true MSE may in some range decrease quickly with sample size for high-dimensional models, and resampling algorithms fail to detect this.\\label{fig:biasMSEHD}", fig.width = 4.2}
 biasCVHD = cbind("biasMSE" = sapply(sweepProcessHD, function(x){
     mean(sapply(x, function(y){
         y$MSEhat-y$true["trueMSE"]
@@ -1555,7 +1557,7 @@ ggplot(data = sweepSumMoltHigh[with(sweepSumMoltHigh, bootRepsOuter == 30 & Meth
     geom_hline(yintercept = 1-sigLevel, linetype = 'dotted')+ ylab(bquote("Coverage of the 95% confidence intervals for the "*R^2)) + scale_colour_manual(values = methodColours[names(methodColours) %in% labels2plotHigh]) + xlab("Sample size") + scale_x_continuous(breaks = samSizeHigh) + theme(axis.text.x = element_text(angle=60))
 ```
 
-```{r plotwidthsweepHDboot, fig.cap = 'Average width of the 95\\% confidence intervals for the .632 bootstrap \\rsq (y-axis) for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of bootstrap replicates (top panels) for 30 outer bootstrap samples for the high-dimensional scenario. Some graphs are truncated when all confidence interval estimations failed for a certain setting.\\label{fig:sweepWidthHDBoot}'}
+```{r plotwidthsweepHDboot, fig.cap = 'Average width of the 95\\% confidence intervals for the .632 bootstrap \\rsq (y-axis) for different sample sizes (x-axis), method (colour), signal strength (side panel) and number of bootstrap replicates (top panels) for 30 outer bootstrap samples for the high-dimensional scenario. Some lines are truncated when all confidence interval estimations failed for a certain setting.\\label{fig:sweepWidthHDBoot}'}
 sweepSumW = cbind(gridSweepHighBoot, r2cisweepWidthSumHD)
 sweepSumMoltW = melt(sweepSumW, id.vars = names(gridSweepHighBoot), value.name = "Width_of_confidence_interval", variable.name = 'Method')
 sweepSumMoltW$betas = factor(sweepSumMoltW$betas)
@@ -1592,12 +1594,6 @@ ggplot(data = typeIerrorZMolt[with(typeIerrorZMolt, Method %in% labels2plotHigh 
 \clearpage
 
 # The distribution of the \hrsq \label{sec:R2dist}
-
-```{r covMSEMST, eval = FALSE, fig.cap = '\\label{fig:covMSEMST}Scatterplot of MST estimates vs MSE estimates on 5,000 independent test datasets under the null hypothesis in the one-dimensional scenario. The title shows the correlation.', fig.width = 4}
-mse1 = vapply(FUN.VALUE = double(1), trueMSEnullSingle[["p2"]], function(w){w$MSE[1]})
-plot(mse1, margVars, xlab = "Estimated MSE", ylab = "Estimated MST", 
-     main = paste('Correlation:', round(digits = 3, cor(mse1, margVars))))
-```
 
 ```{r trueR2plot, fig.height = 5, fig.cap = "Quantile-quantile (QQ) plots of out-of-sample \\rsq estimated through cross-validation (y-axis) versus normal quantiles (x-axis) for different sample sizes (top panels) and signal strength (side panels) with 500 bootstrap instances and 200 cross-validation splits in the one-dimensional scenario. The dotted line indicates the maximum of 1. The \\hrsq behaves non-normally when the sample size is small.\\label{fig:trueR2plot}"}
 ggplot(data = trueR2sAll[with(trueR2sAll, bootReps == 500 & cvSplitsSweep == 200) ,], aes(sample = R2)) + geom_qq(size = 0.5) + geom_qq_line() + facet_grid(betas ~ samSize)+
