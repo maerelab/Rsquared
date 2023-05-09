@@ -671,7 +671,7 @@ biasAllAgg$Resampling_method = factor(biasAllAgg$Resampling_method, levels = c("
 ggplot(data = biasAllAgg, aes_string(y = "biasMSE", x = "samSize")) + geom_line() + facet_grid(betas ~ Resampling_method) + xlab("Sample size") + ylab(bquote('Bias of MSE estimation')) + geom_hline(yintercept = 0, linetype = "dotted") 
 ```
 
-```{r biasR2, fig.cap = "Estimation error of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) in the one-dimensional scenario over 1,000 Monte-Carlo instances as a function of sample size (x-axis) and signal strength (side panels) for 200 cross-validation splits and 200 .632 bootstrap instances. Bias decreases with growing sample size and for .632 bootstrap with growing effect size. \\label{fig:biasR2Uni}", fig.width = 4.2}
+```{r biasR2, fig.cap = "Estimation error of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) using the pooling estimator in the one-dimensional scenario over 1,000 Monte-Carlo instances as a function of sample size (x-axis) and signal strength (side panels) for 200 cross-validation splits and 200 .632 bootstrap instances. Bias decreases with growing sample size and for .632 bootstrap with growing effect size. \\label{fig:biasR2Uni}", fig.width = 4.2}
 biasProcR2 = cbind("biasR2" = sapply(seq_along(sweepProcess), function(x){
     biasR2 = sapply(sweepProcess[[x]], function(y){
         estR2 = 1-y$MSEhat/y$margVar
@@ -728,9 +728,6 @@ abline(h = sdMST^2*(nMST+1)/nMST, col = "blue")
 
 ### Variance
 
-#### The variance of the MSE
-<!-- The estimation of the variance of the MSE is investigated in Figures \ref{fig:biasMSESE}-\ref{fig:biasMSESEboot}. -->
-
 ```{r varMSE, fig.cap = "Mean difference between the cross-validation Var(MSE) estimator by \\textcite{Bates2023} and approximated true variance of the MSE over 1,000 Monte-Carlo instances (y-axis) in the one-dimensional scenario as a function of  sample size (x-axis), number of cross-validation splits (top panels) and signal strength (side panels). The dotted line at zero indicates no bias. For sufficiently large sample sizes and number of cross-validation splits, the estimator of the variance is nearly unbiased.\\label{fig:biasMSESE}"}
 biasProcMSESE = cbind(gridSweep, "biasSEMSE" = sapply(seq_along(sweepProcess), function(x){
     resMSE = sapply(sweepProcess[[x]], function(y){
@@ -753,11 +750,6 @@ ggplot(data = biasProcMSESEboot[biasProcMSESEboot$bootRepsOuter==10,], aes_strin
     geom_line() + facet_grid(betas ~ bootReps, scale = "free_y") + 
     xlab("Sample size") + ylab("Bias of the Var(MSE) estimation") + scale_x_continuous(breaks = samSize) + theme(axis.text.x = element_text(angle = 60)) + geom_hline(yintercept = 0, linetype = "dotted")
 ```
-
-\clearpage
-
-#### Cross-validation
-<!-- Cross-validation results are shown in Figures \ref{fig:mseUni}-\ref{fig:zTest}. -->
 
 ```{r sweepProcBiasSEmse, fig.cap = "MSE of the standard error (SE) of the \\rsq (y-axis) for cross-validation in the one-dimensional scenario as a function of estimation method (colour), sample size (x-axis), number of bootstraps (top panels), signal strength (side panels) and number of cross-validation splits (linetype). The y-axis is on the log scale. The MSE of the SE estimation is seen to decrease with sample size and for the delta method SE also with the number of cross-validation splits. See \\fref{fig:OneDim} in the main text for the direction of the error. \\label{fig:mseUni}", fig.height = 5}
 biasProcSE = Reduce(f = rbind, lapply(seq_along(sweepProcess), function(x){
@@ -828,10 +820,6 @@ typeIerrorZMolt$Method = factor(typeIerrorZMolt$Method, levels = methodLevels, l
 ggplot(data = typeIerrorZMolt[typeIerrorZMolt$Method %in% labels2plot,], aes_string(x = "samSize", y = "Type_I_error", col = "Method", group = "Method")) + geom_point(size = typeIerrorPointSize, position = position_dodge(width = dodgeTypeI)) + facet_grid(cvSplitsSweep ~ bootReps) + xlab("Sample size")+ 
     scale_colour_manual(values = methodColours[names(methodColours) %in% intersect(typeIerrorZMolt$Method, labels2plot)]) + scale_x_continuous(breaks = samSize) + theme(axis.text.x = element_text(angle=60)) +ylab("Type I error")
 ```
-
-\clearpage
-
-#### The .632 bootstrap
 
 ```{r BootSweepCovProc}
 bootSweepCI = lapply(seq_along(sweepBootProcess), function(i){
@@ -1285,7 +1273,7 @@ ggplot(data = biasHDAgg, aes_string(y = "biasMSE", x = "samSize")) + geom_line()
     xlab("Sample size") + scale_x_continuous(breaks = samSizeHigh) + theme(axis.text.x = element_text(angle=60)) + ylab(bquote('Bias of MSE estimation')) + geom_hline(yintercept = 0, linetype = "dotted")
 ```
 
-```{r R2EstimationHD, fig.height = 4, fig.cap = "Bias of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) over 100 Monte-Carlo instances for the high-dimensional scenario as a function of sample size (x-axis) and signal strength (side panels) for 100 cross-validation splits and 200 bootstraps. The horizontal dotted line at 0 indicates no bias. At high sample sizes and effect sizes, the out-of-sample \\rsq is underestimated, implying a conservative assessment of predictive performance. This bias may contribute to the poor coverage of the confidence intervals for high sample sizes (\\fref{fig:HighDim}).\\label{fig:biasR2HD}", fig.width = 4.2}
+```{r R2EstimationHD, fig.height = 4, fig.cap = "Bias of the \\rsq estimation (y-axis) through cross-validation and bootstrap (top panels) using the pooling estimator over 100 Monte-Carlo instances for the high-dimensional scenario as a function of sample size (x-axis) and signal strength (side panels) for 100 cross-validation splits and 200 bootstraps. The horizontal dotted line at 0 indicates no bias. At high sample sizes and effect sizes, the out-of-sample \\rsq is underestimated, implying a conservative assessment of predictive performance. This bias may contribute to the poor coverage of the confidence intervals for high sample sizes (\\fref{fig:HighDim}).\\label{fig:biasR2HD}", fig.width = 4.2}
 biasCVHD = cbind("biasR2" = sapply(sweepProcessHD, function(x){
     mean(sapply(x, function(y){
         estR2 = 1-y$MSEhat/y$margVar
@@ -1312,8 +1300,6 @@ ggplot(data = biasHDAgg, aes_string(y = "biasR2", x = "samSize")) + geom_line() 
 \clearpage
 
 ### Variance
-
-#### Cross-validation
 
 In the high-dimensional scenario with zero effect size, estimating the correlation between $\widehat{MSE}$ and $\widehat{MST}$ is a serious challenge (\fref{fig:corEstHD}), contributing to overestimation of the SE (\fref{fig:HighDim}). 
 
@@ -1463,10 +1449,6 @@ HighDimplot = ggplot(data = moltAllHigh[with(moltAllHigh, cvSplits == 100 & boot
 ggsave(HighDimplot, file = "Graphs/highDimCombi.pdf", height = 5.3, width = 7.5)
 ```
 
-\clearpage
-
-#### The .632 bootstrap
-
 ```{r checkSEhighBoot, fig.cap= "Log10 ratio of the estimated to the Monte-Carlo approximated true SE of the .632 bootstrap \\rsq  (y-axis) across 100 Monte-Carlo instances for the high-dimensional scenario as a function of sample size (x-axis), number of bootstrap replicates (top panels) and signal strength (side panels). The dotted line at 0 is a visual aid. The delta method SE with nonparametric bootstrap or jackknife is the only method that never underestimates the SE.\\label{fig:biasHighBoot}"}
 biasProcSEboot = cbind(gridSweepHighBoot, t(sapply(seq_len(nrow(gridSweepHighBoot)), function(i){ 
     sMat = t(sapply(sweepProcessHDboot[[i]], function(x){
@@ -1595,7 +1577,7 @@ ggplot(data = typeIerrorZMolt[with(typeIerrorZMolt, Method %in% labels2plotHigh 
 
 # The distribution of the \hrsq \label{sec:R2dist}
 
-```{r trueR2plot, fig.height = 5, fig.cap = "Quantile-quantile (QQ) plots of out-of-sample \\rsq estimated through cross-validation (y-axis) versus normal quantiles (x-axis) for different sample sizes (top panels) and signal strength (side panels) with 500 bootstrap instances and 200 cross-validation splits in the one-dimensional scenario. The dotted line indicates the maximum of 1. The \\hrsq behaves non-normally when the sample size is small.\\label{fig:trueR2plot}"}
+```{r trueR2plot, fig.height = 5, fig.cap = "Quantile-quantile (QQ) plots of out-of-sample \\rsq estimated through cross-validation (y-axis) versus normal quantiles (x-axis) for different sample sizes (top panels) and signal strength (side panels) with 500 bootstrap instances and 200 cross-validation splits in the one-dimensional scenario. The dotted line indicates the maximum of 1. The \\hrsq behaves non-normally when the sample size is small. The data points shown here correspond to the leftmost boxplots in \\fref{fig:altR2} in the main article.\\label{fig:trueR2plot}"}
 ggplot(data = trueR2sAll[with(trueR2sAll, bootReps == 500 & cvSplitsSweep == 200) ,], aes(sample = R2)) + geom_qq(size = 0.5) + geom_qq_line() + facet_grid(betas ~ samSize)+
     xlab("Theoretical") + ylab("Observed") +geom_hline(linetype = "dotted", yintercept = 1)
 ```
